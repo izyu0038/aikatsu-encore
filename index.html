@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="アイカツ！アンコール">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>アイカツ！アンコール カード検索｜試作品 v17</title>
+<title>アイカツ！アンコール カード検索｜試作品 v24</title>
 <style>
 :root{--bg:#fff7fb;--panel:#fff;--text:#302735;--muted:#806f80;--accent:#d85ca7;--border:#eadce7}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(#fff7fb,#f8f2ff);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}
@@ -121,17 +121,35 @@ body>header{display:none}
 
 
 /* v23 official-data sync */
-.officialSyncPanel{border-color:#cfe5ff;background:linear-gradient(135deg,#fffafd,#f2f8ff)}
-.officialSyncStatus{margin-top:12px;padding:11px 13px;border-radius:14px;background:#fff;color:#6d6174;font-size:12px;line-height:1.6;border:1px solid #eadff0}
-.officialSyncStatus.ok{background:#f1fff7;border-color:#bfe8ce}
-.officialSyncStatus.warn{background:#fff9e9;border-color:#f3d995}
-.officialSyncStatus.error{background:#fff1f4;border-color:#efb8c4}
+.officialSyncPanel{max-width:1150px;margin:12px auto 16px;padding:10px 14px;border:1px solid #d9e9ff;border-radius:16px;background:linear-gradient(135deg,#fffafd,#f4f9ff);box-shadow:0 5px 16px rgba(120,120,180,.08)}
+.officialSyncRow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.officialSyncTitle{font-size:13px;font-weight:900;color:#675b79}
+.officialSyncBtnSmall{appearance:none;border:1px solid #cddff6!important;border-radius:999px!important;padding:7px 11px!important;font-size:11px!important;font-weight:800!important;background:linear-gradient(135deg,#fff,#edf7ff)!important;color:#5c6480!important;cursor:pointer;box-shadow:none!important;min-width:0!important}
+.officialSyncBtnSmall:disabled{opacity:.55;cursor:wait}
+.officialSyncStatus{margin:0;font-size:10px;line-height:1.45;color:#8a7d91}
+.officialSyncStatus.ok{color:#397653}.officialSyncStatus.warn{color:#956d22}.officialSyncStatus.error{color:#ad4556}
+.newCardNotice{display:none;max-width:1150px;margin:0 auto 10px;padding:11px 14px;border:2px solid #ffb9da;border-radius:17px;background:linear-gradient(135deg,#fff1f8,#fff9df);box-shadow:0 7px 18px rgba(220,90,150,.12);color:#6e4b68;font-size:12px;line-height:1.55}
+.newCardNotice.show{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.newCardNotice strong{color:#e34e98;font-size:14px}
+.newCardNotice button{padding:6px 10px!important;border-radius:999px!important;font-size:10px!important;font-weight:800;background:#fff!important;color:#8b5a7b!important}
+@media(max-width:600px){.officialSyncPanel{margin:9px 12px 13px;padding:9px 11px}.officialSyncRow{gap:7px}.officialSyncStatus{width:100%}.newCardNotice{margin:0 12px 9px}}
 
 </style></head>
 <body>
 <section class="heroBanner" aria-label="アイカツ！アンコール カード検索 ヘッダー"><div class="heroText"><strong>カードコレクションをもっと楽しく ✦</strong><span>検索・所持管理・お気に入り・コーデ確認をひとつのサイトで</span></div></section><nav class="siteNav"><button class="navBtn active" data-page="cards">🏠 カード検索</button><button class="navBtn" data-page="collection">👑 マイコレクション</button><button class="navBtn" data-page="maker">👗 コーデメーカー</button></nav>
 <header><div class="inner"><h1>✦ アイカツ！アンコール カード検索</h1><p>1弾85枚｜カード名・キャラクター・タイプ・ブランド・カテゴリで検索｜詳細ページ強化版</p></div></header>
 <main>
+<section class="officialSyncPanel" id="officialSyncPanel">
+  <div class="officialSyncRow">
+    <span class="officialSyncTitle">🔄 公式データ</span>
+    <button type="button" class="officialSyncBtnSmall" id="officialSyncBtn">更新を確認</button>
+    <span id="officialSyncStatus" class="officialSyncStatus">自動チェック中…</span>
+  </div>
+</section>
+<section class="newCardNotice" id="newCardNotice">
+  <div><strong>✨ 新しいカードが見つかりました！</strong><br><span id="newCardNoticeText"></span></div>
+  <button type="button" id="newCardNoticeClose">閉じる</button>
+</section>
 <section class="list" id="list">
 <section class="collection" id="collection"><div class="collectionHead"><div><h2>💖 マイコレクション</h2><div class="collectionLead">所持状況から自動集計します</div></div><div class="collectionHeadControls"><strong id="collectionPercent">0%</strong><button type="button" class="collectionToggle" id="collectionToggle" aria-expanded="true">閉じる ▲</button></div></div><div class="collectionBody" id="collectionBody"><div class="collectionStats"><div class="statCard"><div class="statLabel">所持カード</div><div class="statValue" id="collectionOwned">0 / 107</div></div><div class="statCard"><div class="statLabel">コンプまで</div><div class="statValue" id="collectionRemaining">あと 107枚</div></div><div class="statCard"><div class="statLabel">未所持</div><div class="statValue" id="collectionMissing">0</div></div><div class="statCard"><div class="statLabel">未チェック</div><div class="statValue" id="collectionUnchecked">107</div></div><div class="statCard"><div class="statLabel">お気に入り</div><div class="statValue" id="collectionFav">0</div></div></div><div class="progressTrack"><div class="progressFill" id="collectionProgress"></div></div><div class="progressText" id="collectionProgressText"></div><div class="breakdown"><div class="breakdownBox"><h3>レアリティ別</h3><div id="rarityProgress"></div></div><div class="breakdownBox"><h3>タイプ別</h3><div id="typeProgress"></div></div></div><div class="collectionActions"><button class="collectionBtn" id="collectionOwnedOnly">✓ 所持カードを見る</button><button class="collectionBtn" id="collectionMissingOnly">□ 未所持カードだけ見る</button><button class="collectionBtn" id="collectionResetFilters">すべてのカードを見る</button></div><div class="coordinateSection"><div class="coordinateSummary"><h3>👗 コーデセット</h3><strong id="coordinateCompleteCount">0 / 0 完成</strong></div><div class="coordinateGrid" id="coordinateGrid"></div></div></div></section>
 <div class="search"><div class="filters">
@@ -159,15 +177,6 @@ body>header{display:none}
 <p class="note">カード画像は公式サイトの画像URLを参照しています。サイト公開時は、画像利用条件・著作権・利用規約を確認してください。</p></div></div></section>
 <div class="makerPicker" id="makerPicker" aria-hidden="true"><div class="makerPickerPanel"><div class="makerPickerHead"><h3 id="makerPickerTitle">カードを選ぶ</h3><button type="button" class="makerPickerClose" id="makerPickerClose" aria-label="閉じる">×</button></div><div class="makerPickerTools"><input id="makerPickerSearch" placeholder="カード名・番号で検索"><select id="makerPickerSort" aria-label="アピールポイント順"><option value="default">カード番号順</option><option value="powerDesc">AP 高い順</option><option value="powerAsc">AP 低い順</option></select></div><div class="makerPickerGrid" id="makerPickerGrid"></div></div></div><div class="modal" id="imageModal"><button class="modalClose" id="modalClose" aria-label="閉じる">×</button><img id="modalImage" alt="拡大画像"><div class="modalHint">画像の外側をタップして閉じる</div></div>
 
-
-<section class="backupPanel officialSyncPanel" id="officialSyncPanel">
-  <h2>🔄 公式データ更新</h2>
-  <p>公式カードリストをもとにGitHub Actionsが作成した更新データを確認します。所持状況・お気に入り・保存コーデは変更しません。</p>
-  <div class="backupActions">
-    <button type="button" class="backupBtn export backupMainBtn" id="officialSyncBtn">🔄 公式データを確認・反映</button>
-  </div>
-  <div id="officialSyncStatus" class="officialSyncStatus">まだ確認していません。</div>
-</section>
 
 <section class="backupPanel" id="backupPanel">
   <h2>☁️ データのバックアップ</h2>
@@ -381,7 +390,71 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
 
 
 <script>
-/* v23 official data loader
+/* v24 automatic new-card notice.
+   Checks generated GitHub data on page load and only announces IDs not already built into this page. */
+(function(){
+  const notice = document.getElementById('newCardNotice');
+  const text = document.getElementById('newCardNoticeText');
+  const close = document.getElementById('newCardNoticeClose');
+  const status = document.getElementById('officialSyncStatus');
+  if(close) close.onclick = () => notice && notice.classList.remove('show');
+
+  function collectCards(payload){
+    if(!payload) return [];
+    if(Array.isArray(payload)) return payload;
+    for(const key of ['cards','newCards','candidates','new_card_candidates','items']){
+      if(Array.isArray(payload[key])) return payload[key];
+    }
+    return [];
+  }
+  function cardId(x){
+    if(typeof x === 'string') return x;
+    return x && (x.id || x.cardId || x.card_id || x.code || x.number);
+  }
+  async function getJson(url){
+    const r = await fetch(url + '?ts=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error(String(r.status));
+    return r.json();
+  }
+  async function autoCheck(){
+    const builtIn = new Set((typeof cards !== 'undefined' && Array.isArray(cards) ? cards : []).map(c=>c.id));
+    let found = [];
+    let checkedAt = null;
+    try{
+      const official = await getJson('./data/official_cards.json');
+      checkedAt = official && official.checkedAt;
+      found = collectCards(official).filter(x => {
+        const id = cardId(x);
+        return id && !builtIn.has(id);
+      });
+    }catch(e){}
+
+    if(!found.length){
+      try{
+        const candidates = await getJson('./data/new_card_candidates.json');
+        checkedAt = checkedAt || (candidates && candidates.checkedAt);
+        found = collectCards(candidates).filter(x => {
+          const id = cardId(x);
+          return id && !builtIn.has(id);
+        });
+      }catch(e){}
+    }
+
+    const ids = [...new Set(found.map(cardId).filter(Boolean))];
+    if(ids.length && notice && text){
+      text.textContent = `${ids.length}枚の新規カード候補：${ids.slice(0,8).join('、')}${ids.length>8?' ほか':''}`;
+      notice.classList.add('show');
+      if(status) status.textContent = `新規候補 ${ids.length}枚`;
+    }else if(status){
+      status.textContent = checkedAt ? '最新データを確認済み' : '更新を確認できます';
+    }
+  }
+  window.addEventListener('load', autoCheck);
+})();
+</script>
+
+<script>
+/* v24 official data loader
    Reads data/official_cards.json generated in the same GitHub Pages repository.
    Only fields explicitly present in that file are applied. User localStorage is untouched. */
 (function(){
@@ -394,7 +467,7 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
   btn.addEventListener('click', async function(){
     btn.disabled = true;
     status.className = 'officialSyncStatus';
-    status.textContent = '公式更新データを確認しています…';
+    status.textContent = '確認中…';
     try{
       const res = await fetch('./data/official_cards.json?ts=' + Date.now(), {cache:'no-store'});
       if(!res.ok) throw new Error('HTTP '+res.status);
@@ -437,12 +510,12 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
 
       status.className = 'officialSyncStatus ok';
       const checked = payload.checkedAt ? new Date(payload.checkedAt).toLocaleString('ja-JP') : '日時不明';
-      status.innerHTML = `確認完了 ✨　新規 <b>${added}</b>枚 / 更新 <b>${updated}</b>枚<br>公式データ確認日時：${esc(checked)}<br>ページを再読み込みすると通常表示に戻ります。`;
+      status.innerHTML = `確認完了 ✨ 新規 <b>${added}</b>枚 / 更新 <b>${updated}</b>枚 ・ ${esc(checked)}`;
       if(typeof render === 'function') render();
       else if(typeof renderCards === 'function') renderCards();
     }catch(e){
       status.className = 'officialSyncStatus error';
-      status.innerHTML = '更新データを取得できませんでした。<br><small>GitHubの <code>data/official_cards.json</code> がまだ作成されていない場合は、先にActions側の設定が必要です。</small>';
+      status.textContent = '更新データを取得できませんでした';
       console.error(e);
     }finally{
       btn.disabled = false;
