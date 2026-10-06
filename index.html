@@ -119,6 +119,14 @@ body>header{display:none}
   .backupRestoreBtn{width:100%!important}
 }
 
+
+/* v23 official-data sync */
+.officialSyncPanel{border-color:#cfe5ff;background:linear-gradient(135deg,#fffafd,#f2f8ff)}
+.officialSyncStatus{margin-top:12px;padding:11px 13px;border-radius:14px;background:#fff;color:#6d6174;font-size:12px;line-height:1.6;border:1px solid #eadff0}
+.officialSyncStatus.ok{background:#f1fff7;border-color:#bfe8ce}
+.officialSyncStatus.warn{background:#fff9e9;border-color:#f3d995}
+.officialSyncStatus.error{background:#fff1f4;border-color:#efb8c4}
+
 </style></head>
 <body>
 <section class="heroBanner" aria-label="アイカツ！アンコール カード検索 ヘッダー"><div class="heroText"><strong>カードコレクションをもっと楽しく ✦</strong><span>検索・所持管理・お気に入り・コーデ確認をひとつのサイトで</span></div></section><nav class="siteNav"><button class="navBtn active" data-page="cards">🏠 カード検索</button><button class="navBtn" data-page="collection">👑 マイコレクション</button><button class="navBtn" data-page="maker">👗 コーデメーカー</button></nav>
@@ -150,6 +158,16 @@ body>header{display:none}
 <a class="official" href="https://dcd.aikatsu.com/encore/cardlist/?display=1&search=true&series=629001&sort=1" target="_blank" rel="noopener">公式カードリストを見る ↗</a>
 <p class="note">カード画像は公式サイトの画像URLを参照しています。サイト公開時は、画像利用条件・著作権・利用規約を確認してください。</p></div></div></section>
 <div class="makerPicker" id="makerPicker" aria-hidden="true"><div class="makerPickerPanel"><div class="makerPickerHead"><h3 id="makerPickerTitle">カードを選ぶ</h3><button type="button" class="makerPickerClose" id="makerPickerClose" aria-label="閉じる">×</button></div><div class="makerPickerTools"><input id="makerPickerSearch" placeholder="カード名・番号で検索"><select id="makerPickerSort" aria-label="アピールポイント順"><option value="default">カード番号順</option><option value="powerDesc">AP 高い順</option><option value="powerAsc">AP 低い順</option></select></div><div class="makerPickerGrid" id="makerPickerGrid"></div></div></div><div class="modal" id="imageModal"><button class="modalClose" id="modalClose" aria-label="閉じる">×</button><img id="modalImage" alt="拡大画像"><div class="modalHint">画像の外側をタップして閉じる</div></div>
+
+
+<section class="backupPanel officialSyncPanel" id="officialSyncPanel">
+  <h2>🔄 公式データ更新</h2>
+  <p>公式カードリストをもとにGitHub Actionsが作成した更新データを確認します。所持状況・お気に入り・保存コーデは変更しません。</p>
+  <div class="backupActions">
+    <button type="button" class="backupBtn export backupMainBtn" id="officialSyncBtn">🔄 公式データを確認・反映</button>
+  </div>
+  <div id="officialSyncStatus" class="officialSyncStatus">まだ確認していません。</div>
+</section>
 
 <section class="backupPanel" id="backupPanel">
   <h2>☁️ データのバックアップ</h2>
@@ -356,6 +374,78 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
     }catch(e){
       alert('バックアップファイルを読み込めませんでした。ファイルが壊れていないか確認してください。');
       console.error(e);
+    }
+  });
+})();
+</script>
+
+
+<script>
+/* v23 official data loader
+   Reads data/official_cards.json generated in the same GitHub Pages repository.
+   Only fields explicitly present in that file are applied. User localStorage is untouched. */
+(function(){
+  const btn = document.getElementById('officialSyncBtn');
+  const status = document.getElementById('officialSyncStatus');
+  if(!btn || !status) return;
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  btn.addEventListener('click', async function(){
+    btn.disabled = true;
+    status.className = 'officialSyncStatus';
+    status.textContent = '公式更新データを確認しています…';
+    try{
+      const res = await fetch('./data/official_cards.json?ts=' + Date.now(), {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const payload = await res.json();
+      if(!payload || !Array.isArray(payload.cards)) throw new Error('invalid format');
+
+      const current = Array.isArray(window.cards) ? window.cards :
+                      (typeof cards !== 'undefined' && Array.isArray(cards) ? cards : null);
+      if(!current) {
+        status.className = 'officialSyncStatus warn';
+        status.textContent = '更新データは取得できましたが、この版のカード配列を自動更新できませんでした。';
+        return;
+      }
+
+      const byId = new Map(current.map(c => [c.id, c]));
+      let added = 0, updated = 0;
+      const safeFields = ['name','rarity','type','brand','category','cardType','appealPoints','front','back','character','series'];
+      for(const incoming of payload.cards){
+        if(!incoming || !incoming.id) continue;
+        const old = byId.get(incoming.id);
+        if(!old){
+          current.push({...incoming});
+          byId.set(incoming.id, current[current.length-1]);
+          added++;
+        } else {
+          let changed = false;
+          for(const key of safeFields){
+            if(Object.prototype.hasOwnProperty.call(incoming,key) && incoming[key] !== old[key]){
+              old[key] = incoming[key];
+              changed = true;
+            }
+          }
+          if(changed) updated++;
+        }
+      }
+
+      try {
+        localStorage.setItem('aikatsuOfficialDataCache', JSON.stringify(payload));
+      } catch(e){}
+
+      status.className = 'officialSyncStatus ok';
+      const checked = payload.checkedAt ? new Date(payload.checkedAt).toLocaleString('ja-JP') : '日時不明';
+      status.innerHTML = `確認完了 ✨　新規 <b>${added}</b>枚 / 更新 <b>${updated}</b>枚<br>公式データ確認日時：${esc(checked)}<br>ページを再読み込みすると通常表示に戻ります。`;
+      if(typeof render === 'function') render();
+      else if(typeof renderCards === 'function') renderCards();
+    }catch(e){
+      status.className = 'officialSyncStatus error';
+      status.innerHTML = '更新データを取得できませんでした。<br><small>GitHubの <code>data/official_cards.json</code> がまだ作成されていない場合は、先にActions側の設定が必要です。</small>';
+      console.error(e);
+    }finally{
+      btn.disabled = false;
     }
   });
 })();
