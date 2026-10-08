@@ -487,7 +487,7 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
       notice.classList.add('show');
       if(status) status.textContent = `新規候補 ${ids.length}枚`;
     }else if(status){
-      status.textContent = checkedAt ? '最新データを確認済み' : '更新を確認できます';
+      status.textContent = checkedAt ? '保存済みデータを確認済み（公式サイトとの一致は未確認）' : '保存済みデータに新規候補なし（公式サイトとの一致は未確認）';
     }
   }
   window.addEventListener('load', autoCheck);
@@ -551,7 +551,7 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
 
       status.className = 'officialSyncStatus ok';
       const checked = payload.checkedAt ? new Date(payload.checkedAt).toLocaleString('ja-JP') : '日時不明';
-      status.innerHTML = `確認完了 ✨ 新規 <b>${added}</b>枚 / 更新 <b>${updated}</b>枚 ・ ${esc(checked)}`;
+      status.innerHTML = `保存済みデータを読込 ✨ 新規 <b>${added}</b>枚 / 更新 <b>${updated}</b>枚 ・ ${esc(checked)}${!payload.checkedAt ? ' ・ 公式サイトとの照合は未実施' : ''}`;
       if(typeof render === 'function') render();
       else if(typeof renderCards === 'function') renderCards();
     }catch(e){
