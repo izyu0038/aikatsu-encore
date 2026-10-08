@@ -530,7 +530,7 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
         if(!incoming || !incoming.id) continue;
         const old = byId.get(incoming.id);
         if(!old){
-          current.push({...incoming});
+          current.push({...incoming,rarityCode:incoming.rarityCode || String(incoming.id).split('_').pop()});
           byId.set(incoming.id, current[current.length-1]);
           added++;
         } else {
@@ -562,6 +562,8 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
       btn.disabled = false;
     }
   });
+  // v32: apply verified JSON automatically on page load.
+  window.addEventListener('load', () => btn.click());
 })();
 </script>
 
