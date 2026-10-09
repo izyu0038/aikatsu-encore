@@ -1,22 +1,45 @@
 {
-  "checked_at_utc": "2026-10-09T01:15:43.040580+00:00",
-  "official_found_count": 85,
-  "new_count": 0,
-  "new_cards": [],
-  "added_to_official_cards": [],
+  "checked_at_utc": "2026-10-09T07:41:04.065522+00:00",
+  "official_found_count": 113,
+  "new_count": 10,
+  "new_cards": [
+    "EP-029_R",
+    "EP-030_R",
+    "EP-031_R",
+    "EP-032_R",
+    "EP-033_R",
+    "EP-034_R",
+    "EP-035_R",
+    "EP-036_R",
+    "EP-037_N",
+    "EP-038_N"
+  ],
+  "added_to_official_cards": [
+    "EP-029_R",
+    "EP-030_R",
+    "EP-031_R",
+    "EP-032_R",
+    "EP-033_R",
+    "EP-034_R",
+    "EP-035_R",
+    "EP-036_R",
+    "EP-037_N",
+    "EP-038_N"
+  ],
   "found_by_series": {
+    "プロモーションカード": 28,
     "第1弾": 85
   },
   "found_by_source": {
-    "全カード": 85,
-    "第1弾": 85,
-    "プロモーションカード": 85
+    "全カード（POST）": 113,
+    "プロモーションカード（POST）": 28,
+    "第1弾（POST）": 85
   },
-  "discovered_series_codes": [],
-  "errors": {},
-  "warnings": [
-    "第1弾とプロモーションの応答が同一です。URLの絞り込みを信用せずカード番号で分類しました。",
-    "プロモーションは0枚検出。公式表示28枚との差があります。ページの取得範囲を確認してください。"
+  "discovered_series_codes": [
+    "629001",
+    "629901"
   ],
+  "errors": {},
+  "warnings": [],
   "note": "公式カード画像のIDから仮登録。未取得のカード名・属性は確認中。公式サイトの掲載範囲や将来の構造変更により検出漏れの可能性あり。"
 }
