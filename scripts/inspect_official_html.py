@@ -106,13 +106,45 @@ def main():
         'targets': targets,
         'caution': 'Text shown only on front/back card images cannot be extracted reliably from HTML. Do not infer missing values.',
     }
+    # Keep every URL tied to its actual card modal; do not guess front/back roles.
+    image_manifest = {
+        'purpose': 'Review image URL candidates for five verified first-series card IDs',
+        'source_page': URL,
+        'series': FIELDS['series'],
+        'cards': [],
+        'caution': 'Image order is not proof of front/back. Verify visually before assigning metadata.',
+    }
+    for card_id in first_series_ids[:TARGET_LIMIT]:
+        images = []
+        for item in parser.modals[card_id]['images']:
+            raw_src = item.get('src', '').strip()
+            if not raw_src:
+                continue
+            absolute_url = urllib.parse.urljoin(URL, raw_src)
+            images.append({
+                'alt': item.get('alt', ''),
+                'source_url': raw_src,
+                'absolute_url': absolute_url,
+                'role': 'unverified',
+            })
+        image_manifest['cards'].append({
+            'card_id': card_id,
+            'images': images,
+            'image_count': len(images),
+        })
     OUT.mkdir(exist_ok=True)
+    manifest_path = OUT / 'first_series_image_manifest.json'
+    manifest_path.write_text(
+        json.dumps(image_manifest, ensure_ascii=False, indent=2) + '\n',
+        encoding='utf-8',
+    )
     path = OUT / 'html_structure_report.json'
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('HTTP:', status, 'Modals:', len(parser.modals), 'First-series:', len(first_series_ids))
     for card_id, info in targets.items():
         print(card_id, 'found:', info['found'], 'labels:', info.get('labels_found_in_modal', []))
     print('Report:', path)
+    print('Image manifest:', manifest_path)
 
 
 if __name__ == '__main__':
