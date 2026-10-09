@@ -168,7 +168,7 @@ body>header{display:none}
 <section class="list" id="list">
 <section class="collection" id="collection"><div class="collectionHead"><div><h2>💖 マイコレクション</h2><div class="collectionLead">所持状況から自動集計します</div></div><div class="collectionHeadControls"><strong id="collectionPercent">0%</strong><button type="button" class="collectionToggle" id="collectionToggle" aria-expanded="true">閉じる ▲</button></div></div><div class="collectionBody" id="collectionBody"><div class="collectionStats"><div class="statCard"><div class="statLabel">所持カード</div><div class="statValue" id="collectionOwned">0 / 107</div></div><div class="statCard"><div class="statLabel">コンプまで</div><div class="statValue" id="collectionRemaining">あと 107枚</div></div><div class="statCard"><div class="statLabel">未所持</div><div class="statValue" id="collectionMissing">0</div></div><div class="statCard"><div class="statLabel">未チェック</div><div class="statValue" id="collectionUnchecked">107</div></div><div class="statCard"><div class="statLabel">お気に入り</div><div class="statValue" id="collectionFav">0</div></div></div><div class="progressTrack"><div class="progressFill" id="collectionProgress"></div></div><div class="progressText" id="collectionProgressText"></div><div class="breakdown"><div class="breakdownBox"><h3>レアリティ別</h3><div id="rarityProgress"></div></div><div class="breakdownBox"><h3>タイプ別</h3><div id="typeProgress"></div></div></div><div class="collectionActions"><button class="collectionBtn" id="collectionOwnedOnly">✓ 所持カードを見る</button><button class="collectionBtn" id="collectionMissingOnly">□ 未所持カードだけ見る</button><button class="collectionBtn" id="collectionResetFilters">すべてのカードを見る</button></div><div class="coordinateSection"><div class="coordinateSummary"><h3>👗 コーデセット</h3><strong id="coordinateCompleteCount">0 / 0 完成</strong></div><div class="coordinateGrid" id="coordinateGrid"></div></div></div></section>
 <div class="search" id="searchPanel"><div class="searchHead"><h2>🔎 カード検索・絞り込み</h2><button type="button" class="searchToggle" id="searchToggle" aria-expanded="false">検索条件を開く ▼</button></div><div class="searchBody collapsed" id="searchBody"><div class="filters">
-<select id="series"><option value="">シリーズ：すべて</option><option value="第1弾">第1弾（85枚）</option><option value="プロモ">プロモーション（22枚）</option></select>
+<select id="series"><option value="">シリーズ：すべて</option><option value="第1弾">第1弾</option><option value="プロモ">プロモーション</option></select>
 <input id="q" placeholder="カード名・番号・キャラクターなど">
 <select id="character"><option value="">キャラクター：すべて</option></select>
 <select id="type"><option value="">タイプ：すべて</option><option>キュート</option><option>クール</option><option>セクシー</option><option>ポップ</option></select>
@@ -178,7 +178,7 @@ body>header{display:none}
 <select id="rarity"><option value="">レアリティ：すべて</option><option value="PR">プレミアムレア</option><option value="R">レア</option><option value="N">ノーマル</option><option value="ER">アンコールレア</option></select>
 <select id="sortOrder"><option value="number">並び順：カード番号</option><option value="powerDesc">アピールポイント：高い順</option><option value="powerAsc">アピールポイント：低い順</option></select>
 </div>
-<div class="note">※「要確認」は、公式カードリストにキャラクター名のテキスト項目がないため、画像だけから断定していないカードです。アピールポイントは「アイカツ！アンコール」公式カードリストで確認できた値のみ登録します。シリーズ切り替えに対応しています。第1弾85枚＋プロモーションカード22枚に対応しています。アピールポイントはアイカツ！アンコール公式カードリストのカード画像から確認した値です。旧カードリストの数値は使用していません。</div><div class="statusbar"><button class="favBtn" id="favOnly">☆ お気に入りだけ表示</button><span class="statusCount" id="favCount"></span><button class="ownedBtn" id="ownedOnly">✓ 所持のみ</button><button class="missingBtn" id="notOwnedOnly">□ 未所持カードだけ</button><button class="missingBtn" id="missingOnly">✕ 未所持登録のみ</button><button class="uncheckedBtn" id="uncheckedOnly">－ 未チェックのみ</button><span class="statusCount" id="ownedCount"></span></div></div></div>
+<div class="note">※「要確認」は、公式カードリストにキャラクター名のテキスト項目がないため、画像だけから断定していないカードです。アピールポイントは「アイカツ！アンコール」公式カードリストで確認できた値のみ登録します。シリーズ切り替えに対応しています。公式データの読み込み後にシリーズ別の枚数を更新します。アピールポイントはアイカツ！アンコール公式カードリストのカード画像から確認した値です。旧カードリストの数値は使用していません。</div><div class="statusbar"><button class="favBtn" id="favOnly">☆ お気に入りだけ表示</button><span class="statusCount" id="favCount"></span><button class="ownedBtn" id="ownedOnly">✓ 所持のみ</button><button class="missingBtn" id="notOwnedOnly">□ 未所持カードだけ</button><button class="missingBtn" id="missingOnly">✕ 未所持登録のみ</button><button class="uncheckedBtn" id="uncheckedOnly">－ 未チェックのみ</button><span class="statusCount" id="ownedCount"></span></div></div></div>
 <div class="recentStrip" id="recentStrip"><h3>🕘 最近見たカード</h3><div class="recentCards" id="recentCards"><span class="note">まだありません</span></div></div><div class="count" id="count"></div><section class="grid" id="grid"></section>
 </section>
 <section class="pageSection" id="characterCheckPage"><div class="characterCheckPanel"><h2 class="characterCheckTitle">🔍 キャラ名確認モード</h2><p class="characterCheckLead">カード裏面に記載されたキャラクター名を確認し、その場で編集・保存できる専用画面です。入力した名前はこの端末に保存され、検索・詳細表示にも反映されます。通常カードは右上、アクセサリーは左下、アンコールレアは左上の「アイカツ！」ロゴの右側を拡大します。アクセサリーとアンコールレアはフルネームまで見えるよう横方向を広めに表示します。現在サイトに登録されているキャラクター名は表示しません。</p><div class="characterCheckTools"><input id="characterCheckSearch" placeholder="カード番号・カード名で検索"><select id="characterCheckSeries"><option value="">全シリーズ</option><option value="E1-">第1弾</option><option value="EP-">プロモーション</option></select><span class="characterCheckCount" id="characterCheckCount"></span><button type="button" class="officialSyncBtnSmall" id="characterExportBtn">キャラ名JSONを書き出す</button></div><datalist id="characterNameSuggestions"></datalist><div class="characterCheckGrid" id="characterCheckGrid"></div></div></section><section class="maker pageSection" id="makerPage"><div class="makerPanel"><h2 class="makerTitle">👗 コーデメーカー</h2><p class="makerLead">カードを組み合わせて、自分だけのコーデを作れます。フルコーデカードも画像から選べます。所持カードだけに絞ることもできます。</p><label><input type="checkbox" id="makerOwnedOnly"> 所持カードだけから選ぶ</label><div class="makerSlots" id="makerSlots"><div class="makerSlot" data-slot="トップス"><h3>🎀 トップス</h3><img alt="トップス"><button type="button" class="makerPickBtn">画像から選ぶ</button><div class="makerChosen">まだ選択されていません</div><select hidden></select></div><div class="makerSlot" data-slot="ボトムス"><h3>✨ ボトムス</h3><img alt="ボトムス"><button type="button" class="makerPickBtn">画像から選ぶ</button><div class="makerChosen">まだ選択されていません</div><select hidden></select></div><div class="makerSlot" data-slot="シューズ"><h3>👠 シューズ</h3><img alt="シューズ"><button type="button" class="makerPickBtn">画像から選ぶ</button><div class="makerChosen">まだ選択されていません</div><select hidden></select></div><div class="makerSlot" data-slot="アクセサリー"><h3>💎 アクセサリー</h3><img alt="アクセサリー"><button type="button" class="makerPickBtn">画像から選ぶ</button><div class="makerChosen">まだ選択されていません</div><select hidden></select></div><div class="makerSlot makerFullCoord" data-slot="フルコーデ"><h3>🌟 フルコーデ</h3><img alt="フルコーデ"><button type="button" class="makerPickBtn">画像から選ぶ</button><div class="makerChosen">まだ選択されていません</div><select hidden></select></div></div><div class="makerSummary"><div>合計アピールポイント<br><span class="makerPower" id="makerPower">0</span></div><button id="saveCoordinate">♡ このコーデを保存</button><button id="clearCoordinate">選択をリセット</button></div><h3>💖 保存したコーデ</h3><div class="savedCoordinates" id="savedCoordinates"></div></div></section><section class="detail" id="detail"><button class="back" id="back">← カード一覧へ戻る</button>
@@ -282,7 +282,16 @@ function clearCollectionFilters(){favOnly.dataset.active='0';ownedOnly.dataset.a
 
 function options(id,key){const vals=[...new Set(cards.map(c=>c[key]))].sort((a,b)=>a.localeCompare(b,'ja'));const el=document.querySelector(id);vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o)})}
 options('#character','character'); options('#brand','brand');
+function refreshSeriesCounts(){
+ const first=cards.filter(c=>c.id.startsWith('E1-')).length;
+ const promo=cards.filter(c=>c.id.startsWith('EP-')).length;
+ const a=els.series.querySelector('option[value="第1弾"]');
+ const b=els.series.querySelector('option[value="プロモ"]');
+ if(a)a.textContent=`第1弾（${first}枚）`;
+ if(b)b.textContent=`プロモーション（${promo}枚）`;
+}
 function render(){
+ refreshSeriesCounts();
  const text=els.q.value.trim().toLowerCase();
  let out=cards.filter(c=>
  (!els.series.value || (els.series.value==='第1弾' ? c.id.startsWith('E1-') : c.id.startsWith('EP-'))) &&
@@ -528,16 +537,21 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
       const safeFields = ['name','rarity','type','brand','category','cardType','appealPoints','front','back','character','series'];
       for(const incoming of payload.cards){
         if(!incoming || !incoming.id) continue;
-        const old = byId.get(incoming.id);
+        // HTML image alt="表面" is not a card name. Keep unknown metadata explicit.
+        const safeIncoming = {...incoming};
+        if(typeof safeIncoming.name === 'string' && /^(表面|裏面|カード|画像|image|front|back)$/i.test(safeIncoming.name.trim())) {
+          safeIncoming.name = `名称確認中（${safeIncoming.id}）`;
+        }
+        const old = byId.get(safeIncoming.id);
         if(!old){
-          current.push({...incoming,rarityCode:incoming.rarityCode || String(incoming.id).split('_').pop()});
+          current.push({...safeIncoming,rarityCode:safeIncoming.rarityCode || String(safeIncoming.id).split('_').pop()});
           byId.set(incoming.id, current[current.length-1]);
           added++;
         } else {
           let changed = false;
           for(const key of safeFields){
-            if(Object.prototype.hasOwnProperty.call(incoming,key) && incoming[key] !== old[key]){
-              old[key] = incoming[key];
+            if(Object.prototype.hasOwnProperty.call(safeIncoming,key) && safeIncoming[key] !== old[key]){
+              old[key] = safeIncoming[key];
               changed = true;
             }
           }
