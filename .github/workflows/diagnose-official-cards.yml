@@ -1,0 +1,20 @@
+name: Diagnose official card listing
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run read-only diagnostic
+        run: python3 scripts/diagnose_official_cards.py
+      - name: Upload diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-card-diagnostic
+          path: diagnostics/official_card_diagnostic.json
+          if-no-files-found: warn
