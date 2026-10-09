@@ -1,0 +1,21 @@
+name: Diagnose official card POST search
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run read-only POST diagnostic
+        run: python3 scripts/diagnose_post_cards.py
+      - name: Upload POST diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-card-post-diagnostic
+          path: diagnostics/official_card_post_diagnostic.json
+          if-no-files-found: warn
