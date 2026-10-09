@@ -1,0 +1,21 @@
+name: Inspect official Encore HTML
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Inspect official card search response
+        run: python scripts/inspect_official_html.py
+      - name: Upload diagnostic report
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-html-diagnostic
+          path: diagnostic_output/html_structure_report.json
+          retention-days: 7
