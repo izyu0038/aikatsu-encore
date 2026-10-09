@@ -569,6 +569,30 @@ updateCollection();window.addEventListener('hashchange',loadHash);loadHash();
       status.innerHTML = `保存済みデータを読込 ✨ 新規 <b>${added}</b>枚 / 更新 <b>${updated}</b>枚 ・ ${esc(checked)}${!payload.checkedAt ? ' ・ 公式サイトとの照合は未実施' : ''}`;
       if(typeof render === 'function') render();
       else if(typeof renderCards === 'function') renderCards();
+      // Keep an already-open detail view in sync after the async JSON load.
+      // Do not call openDetail() here: it would unexpectedly scroll the page.
+      const activeMatch = location.hash.match(/^#card=(.+)$/);
+      const detailPanel = document.getElementById('detail');
+      if(activeMatch && (!detailPanel || detailPanel.classList.contains('show'))){
+        let activeId;
+        try { activeId = decodeURIComponent(activeMatch[1]); } catch(e) { activeId = ''; }
+        const activeCard = current.find(c => c.id === activeId);
+        if(activeCard){
+          const setText = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = value ?? '確認中'; };
+          setText('detailName', activeCard.name);
+          setText('detailRarity', activeCard.rarity);
+          setText('dCharacter', activeCard.character);
+          setText('dType', activeCard.type);
+          setText('dBrand', activeCard.brand);
+          setText('dCategory', activeCard.category);
+          setText('dRarityFull', activeCard.rarity);
+          setText('dPower', activeCard.appealPoints ?? '確認中');
+          const method = typeof activeCard.acquisitionMethod === 'string' ? activeCard.acquisitionMethod.trim() : '';
+          setText('dAcquisitionMethod', method);
+          const methodCard = document.getElementById('acquisitionInfoCard');
+          if(methodCard) methodCard.hidden = !method;
+        }
+      }
     }catch(e){
       status.className = 'officialSyncStatus error';
       status.textContent = '更新データを取得できませんでした';
