@@ -41,6 +41,75 @@ class CardPage(HTMLParser):
                     card_id = m.group(1).upper()
                     self.images[card_id] = (url, d.get('alt','').strip())
 
+class AcquisitionParser(HTMLParser):
+    """Read acquisition text only inside the matching card modal."""
+    def __init__(self):
+        super().__init__()
+        self.depth = 0
+        self.card_id = None
+        self.heading_depth = None
+        self.text_depth = None
+        self.heading = ''
+        self.text = ''
+        self.results = {}
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == 'div' and self.card_id is None:
+            m = re.fullmatch(r'cardModal-(%s)' % ID_PATTERN, a.get('id', ''), re.I)
+            if m:
+                self.card_id = m.group(1).upper()
+                self.depth = 1
+                self.heading = ''
+                self.text = ''
+                return
+        if self.card_id is None:
+            return
+        if tag == 'div':
+            self.depth += 1
+        cls = a.get('class', '').split()
+        if tag == 'h4' and 'cardModal__infoTit' in cls:
+            self.heading_depth = self.depth
+            self.heading = ''
+        if tag == 'p' and 'cardModal__infoTxt' in cls and self.heading == '入手方法':
+            self.text_depth = self.depth
+            self.text = ''
+
+    def handle_data(self, data):
+        if self.card_id is None:
+            return
+        if self.heading_depth is not None:
+            self.heading += data
+        if self.text_depth is not None:
+            self.text += data
+
+    def handle_endtag(self, tag):
+        if self.card_id is None:
+            return
+        if tag == 'h4' and self.heading_depth is not None:
+            self.heading = re.sub(r'\s+', ' ', self.heading).strip()
+            self.heading_depth = None
+        if tag == 'p' and self.text_depth is not None:
+            value = re.sub(r'\s+', ' ', self.text).strip()
+            if value and self.card_id not in self.results:
+                self.results[self.card_id] = value
+            self.text_depth = None
+        if tag == 'div':
+            self.depth -= 1
+            if self.depth == 0:
+                self.card_id = None
+                self.heading_depth = None
+                self.text_depth = None
+                self.heading = ''
+                self.text = ''
+
+
+def parse_acquisition(markup):
+    parser = AcquisitionParser()
+    parser.feed(markup)
+    return parser.results
+
+
 def fetch(url, fields=None):
     """Send the same form-encoded POST as the official search form."""
     headers = {'User-Agent':'Mozilla/5.0', 'Accept':'text/html'}
@@ -102,13 +171,16 @@ def main():
     # 2026-10-09 diagnostic, a blank series returned 113 cards (85 + 28 promos).
     # Do not use the obsolete 629002 code; the official promo code is 629901.
     pages = {}; errors = {}; discovered_series = set(); warnings = []
+    acquisitions = {}
     sources = [('全カード（POST）', ''), ('プロモーションカード（POST）', '629901'),
                ('第1弾（POST）', '629001')]
     for label, code in sources:
         try:
-            imgs, options = parse(fetch(BASE+'?search=true', search_fields(code)))
+            markup = fetch(BASE+'?search=true', search_fields(code))
+            imgs, options = parse(markup)
             pages[label] = imgs
             discovered_series.update(options)
+            acquisitions.update(parse_acquisition(markup))
         except Exception as exc:
             errors[label] = f'{type(exc).__name__}: {exc}'
     # Discover additional official series codes from the site's dropdown,
@@ -120,8 +192,10 @@ def main():
             break
         label = '公式弾数コード ' + code
         try:
-            imgs, options = parse(fetch(BASE+'?search=true', search_fields(code)))
+            markup = fetch(BASE+'?search=true', search_fields(code))
+            imgs, options = parse(markup)
             pages[label] = imgs
+            acquisitions.update(parse_acquisition(markup))
         except Exception as exc:
             errors[label] = f'{type(exc).__name__}: {exc}'
     # Only images actually referenced in official cardlist pages count.
@@ -140,6 +214,7 @@ def main():
     for label in found_by_series: found_by_series[label].sort()
     added = []
     repaired_names = []
+    added_acquisitions = []
     for card_id,(_,alt) in sorted(all_images.items()):
         if card_id not in existing and card_id not in known:
             existing[card_id] = candidate(card_id,alt)
@@ -150,6 +225,10 @@ def main():
             if old_name in {'表面', '裏面', 'カード表面', 'カード裏面'}:
                 existing[card_id]['name'] = provisional_name(card_id)
                 repaired_names.append(card_id)
+        if card_id in existing and card_id in acquisitions:
+            if not str(existing[card_id].get('acquisitionMethod') or '').strip():
+                existing[card_id]['acquisitionMethod'] = acquisitions[card_id]
+                added_acquisitions.append(card_id)
     if not pages:
         raise SystemExit('All official page fetches failed; existing data unchanged')
     checked = datetime.now(timezone.utc).isoformat()
@@ -161,7 +240,8 @@ def main():
         warnings.append(f'プロモーションは{promo_count}枚検出。公式表示28枚との差があります。ページの取得範囲を確認してください。')
     report = {'checked_at_utc':checked,'official_found_count':len(all_images),
               'new_count':len(set(all_images)-known),'new_cards':sorted(set(all_images)-known),
-              'added_to_official_cards':added,'repaired_image_side_names':repaired_names,'found_by_series':{k:len(v) for k,v in sorted(found_by_series.items())},
+              'added_to_official_cards':added,'repaired_image_side_names':repaired_names,
+              'added_acquisition_methods':added_acquisitions,'acquisition_found_count':len(acquisitions),'found_by_series':{k:len(v) for k,v in sorted(found_by_series.items())},
               'found_by_source':{k:len(v) for k,v in pages.items()},
               'discovered_series_codes':sorted(discovered_series),
               'errors':errors,'warnings':warnings,
