@@ -10,9 +10,10 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 URL = 'https://dcd.aikatsu.com/encore/cardlist/?search=true'
-FIELDS = {'free': '', 'series': '629901', 'type': '', 'rarity': '',
+FIELDS = {'free': '', 'series': '629001', 'type': '', 'rarity': '',
           'category': '', 'brand': '', 'display': '1', 'sort': '1'}
-TARGETS = ('EP-029_R', 'EP-035_R', 'EP-038_N')
+# 第1弾の実在するカードIDをHTMLから選ぶ（番号を推測しない）
+TARGET_LIMIT = 5
 LABELS = ('カード名', 'キャラクター', 'タイプ', 'ブランド', 'カテゴリ',
           'アピールポイント', '入手方法', 'レアリティ')
 OUT = Path('diagnostic_output')
@@ -80,7 +81,8 @@ def main():
     parser = CardModalParser()
     parser.feed(html)
     targets = {}
-    for card_id in TARGETS:
+    first_series_ids = sorted(card_id for card_id in parser.modals if card_id.startswith('E1-'))
+    for card_id in first_series_ids[:TARGET_LIMIT]:
         modal = parser.modals.get(card_id)
         if modal is None:
             targets[card_id] = {'found': False}
@@ -98,13 +100,16 @@ def main():
         'http_status': status,
         'html_length': len(html),
         'total_modals': len(parser.modals),
+        'first_series_modal_count': len(first_series_ids),
+        'sampled_ids': first_series_ids[:TARGET_LIMIT],
+        'series': '629001',
         'targets': targets,
         'caution': 'Text shown only on front/back card images cannot be extracted reliably from HTML. Do not infer missing values.',
     }
     OUT.mkdir(exist_ok=True)
     path = OUT / 'html_structure_report.json'
     path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('HTTP:', status, 'Modals:', len(parser.modals))
+    print('HTTP:', status, 'Modals:', len(parser.modals), 'First-series:', len(first_series_ids))
     for card_id, info in targets.items():
         print(card_id, 'found:', info['found'], 'labels:', info.get('labels_found_in_modal', []))
     print('Report:', path)
