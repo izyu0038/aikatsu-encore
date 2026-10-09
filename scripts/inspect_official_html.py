@@ -1,82 +1,113 @@
-"""Read-only diagnostic: inspect card-specific HTML near official promo images.
+"""Read-only diagnostic for official Aikatsu Encore card metadata.
 
-Does not write to the website's data/ directory or alter existing card data.
+Writes a JSON report to diagnostic_output only; never modifies card data.
 """
 import json
 import re
 import urllib.parse
 import urllib.request
-from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 
-OUT = Path('diagnostic_output')
-OUT.mkdir(exist_ok=True)
 URL = 'https://dcd.aikatsu.com/encore/cardlist/?search=true'
 FIELDS = {'free': '', 'series': '629901', 'type': '', 'rarity': '',
           'category': '', 'brand': '', 'display': '1', 'sort': '1'}
-TARGETS = ['EP-029_R', 'EP-035_R', 'EP-038_N']
+TARGETS = ('EP-029_R', 'EP-035_R', 'EP-038_N')
+LABELS = ('カード名', 'キャラクター', 'タイプ', 'ブランド', 'カテゴリ',
+          'アピールポイント', '入手方法', 'レアリティ')
+OUT = Path('diagnostic_output')
 
 
-class TextExtractor(HTMLParser):
+class CardModalParser(HTMLParser):
     def __init__(self):
-        super().__init__()
-        self.parts = []
+        super().__init__(convert_charrefs=True)
+        self.stack = []
+        self.modals = {}
+        self.active = None
+        self.modal_depth = 0
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if self.active is None and tag == 'div':
+            match = re.fullmatch(r'cardModal-(E[1P]-[0-9]+_[A-Z]+)', a.get('id', ''))
+            if match:
+                self.active = match.group(1)
+                self.modal_depth = 0
+                self.modals[self.active] = {'text_parts': [], 'images': [], 'elements': []}
+        if self.active is not None:
+            self.stack.append(tag)
+            if tag == 'div':
+                self.modal_depth += 1
+            if tag == 'img':
+                self.modals[self.active]['images'].append({
+                    'alt': a.get('alt', ''), 'src': a.get('src', ''),
+                })
+            if tag in ('h2', 'h3', 'h4', 'dt', 'dd', 'p', 'span'):
+                self.modals[self.active]['elements'].append({
+                    'tag': tag, 'class': a.get('class', ''), 'text': ''
+                })
 
     def handle_data(self, data):
+        if self.active is None:
+            return
         value = ' '.join(data.split())
         if value:
-            self.parts.append(value)
+            self.modals[self.active]['text_parts'].append(value)
+            if self.modals[self.active]['elements']:
+                self.modals[self.active]['elements'][-1]['text'] += value + ' '
 
-
-def surrounding_html(markup, card_id):
-    # This is diagnostic context, not proof that nearby text belongs to a card.
-    hits = list(re.finditer(re.escape(card_id), markup, flags=re.I))
-    samples = []
-    for match in hits[:4]:
-        left = max(0, match.start() - 2500)
-        right = min(len(markup), match.end() + 3500)
-        snippet = markup[left:right]
-        parser = TextExtractor()
-        parser.feed(snippet)
-        text = ' / '.join(parser.parts)
-        samples.append({
-            'position': match.start(),
-            'html_excerpt': snippet,
-            'nearby_visible_text': text[:2500],
-            'contains_acquisition_label': '入手方法' in snippet,
-        })
-    return {'occurrences': len(hits), 'samples': samples}
+    def handle_endtag(self, tag):
+        if self.active is None:
+            return
+        if tag == 'div':
+            self.modal_depth -= 1
+        if self.stack:
+            self.stack.pop()
+        if self.modal_depth == 0:
+            self.active = None
 
 
 def main():
     request = urllib.request.Request(
-        URL,
-        data=urllib.parse.urlencode(FIELDS).encode('utf-8'),
+        URL, data=urllib.parse.urlencode(FIELDS).encode('utf-8'),
         headers={'User-Agent': 'Mozilla/5.0',
                  'Content-Type': 'application/x-www-form-urlencoded',
                  'Accept': 'text/html'},
     )
     with urllib.request.urlopen(request, timeout=40) as response:
-        body = response.read().decode('utf-8', 'replace')
-        final_url = response.url
+        html = response.read().decode('utf-8', 'replace')
         status = response.status
-
+    parser = CardModalParser()
+    parser.feed(html)
+    targets = {}
+    for card_id in TARGETS:
+        modal = parser.modals.get(card_id)
+        if modal is None:
+            targets[card_id] = {'found': False}
+            continue
+        text = ' / '.join(modal['text_parts'])
+        targets[card_id] = {
+            'found': True,
+            'visible_text': text[:12000],
+            'labels_found_in_modal': [label for label in LABELS if label in text],
+            'images': modal['images'],
+            'text_elements': [e for e in modal['elements'] if e['text'].strip()][:80],
+        }
     report = {
-        'purpose': 'Inspect whether card ID and acquisition method can be reliably associated',
-        'request': {'url': URL, 'method': 'POST', 'fields': FIELDS},
-        'response_url': final_url,
+        'purpose': 'Identify metadata fields actually present as text in each official card modal',
         'http_status': status,
-        'html_length': len(body),
-        'targets': {card_id: surrounding_html(body, card_id) for card_id in TARGETS},
-        'caution': 'Nearby text is NOT verified as belonging to a card. Review HTML structure before implementing extraction. No metadata is inferred from images.',
+        'html_length': len(html),
+        'total_modals': len(parser.modals),
+        'targets': targets,
+        'caution': 'Text shown only on front/back card images cannot be extracted reliably from HTML. Do not infer missing values.',
     }
-    destination = OUT / 'html_structure_report.json'
-    destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('Diagnostic complete. HTTP:', status)
-    for card_id, details in report['targets'].items():
-        print(card_id, 'occurrences:', details['occurrences'])
-    print('Report saved:', destination)
+    OUT.mkdir(exist_ok=True)
+    path = OUT / 'html_structure_report.json'
+    path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print('HTTP:', status, 'Modals:', len(parser.modals))
+    for card_id, info in targets.items():
+        print(card_id, 'found:', info['found'], 'labels:', info.get('labels_found_in_modal', []))
+    print('Report:', path)
 
 
 if __name__ == '__main__':
