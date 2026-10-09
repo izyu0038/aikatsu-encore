@@ -17,5 +17,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: official-html-diagnostic
-          path: diagnostic_output/html_structure_report.json
+          path: diagnostic_output/
           retention-days: 7
