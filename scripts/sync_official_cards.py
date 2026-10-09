@@ -27,8 +27,10 @@ class CardPage(HTMLParser):
         super().__init__(); self.images = {}; self.series_options = set(); self._in_select = False
     def handle_starttag(self, tag, attrs):
         d = dict(attrs)
-        if tag == 'option' and d.get('value','').isdigit():
-            self.series_options.add(d['value'])
+        if tag in ('option', 'button'):
+            value = d.get('data-value', d.get('value', ''))
+            if value.isdigit() and len(value) >= 4:
+                self.series_options.add(value)
         if tag not in ('img','a','source'): return
         for attr in ('src','data-src','data-original','data-lazy-src','href','srcset'):
             raw = html.unescape(d.get(attr,'')).replace('\\/','/')
@@ -39,10 +41,20 @@ class CardPage(HTMLParser):
                     card_id = m.group(1).upper()
                     self.images[card_id] = (url, d.get('alt','').strip())
 
-def fetch(url):
-    req = urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0','Accept':'text/html'})
-    with urllib.request.urlopen(req,timeout=40) as response:
+def fetch(url, fields=None):
+    """Send the same form-encoded POST as the official search form."""
+    headers = {'User-Agent':'Mozilla/5.0', 'Accept':'text/html'}
+    if fields is not None:
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    body = urllib.parse.urlencode(fields).encode('utf-8') if fields is not None else None
+    req = urllib.request.Request(url, data=body, headers=headers)
+    with urllib.request.urlopen(req, timeout=40) as response:
         return response.read().decode('utf-8','replace')
+
+
+def search_fields(series=''):
+    return {'free':'', 'series':series, 'type':'', 'rarity':'',
+            'category':'', 'brand':'', 'display':'1', 'sort':'1'}
 
 def series_of(card_id):
     if card_id.startswith('EP-'): return 'プロモーションカード'
@@ -74,15 +86,30 @@ def main():
     known_data = json.loads(known_file.read_text('utf-8')) if known_file.exists() else {'cards':[]}
     known_list = known_data.get('cards',[]) if isinstance(known_data,dict) else known_data
     known = {str(c.get('id') if isinstance(c,dict) else c).upper() for c in known_list}
-    # The unfiltered official list is authoritative for discovering IDs. Do not trust
-    # a query parameter as evidence that a response is limited to one series.
-    sources = {'全カード': BASE, '第1弾':BASE+'?display=1&search=true&series=629001&sort=1',
-               'プロモーションカード':BASE+'?display=1&search=true&series=629002&sort=1'}
+    # The official form submits POST to ?search=true. In the verified
+    # 2026-10-09 diagnostic, a blank series returned 113 cards (85 + 28 promos).
+    # Do not use the obsolete 629002 code; the official promo code is 629901.
     pages = {}; errors = {}; discovered_series = set(); warnings = []
-    for label,url in sources.items():
+    sources = [('全カード（POST）', ''), ('プロモーションカード（POST）', '629901'),
+               ('第1弾（POST）', '629001')]
+    for label, code in sources:
         try:
-            imgs, options = parse(fetch(url))
-            pages[label] = imgs; discovered_series.update(options)
+            imgs, options = parse(fetch(BASE+'?search=true', search_fields(code)))
+            pages[label] = imgs
+            discovered_series.update(options)
+        except Exception as exc:
+            errors[label] = f'{type(exc).__name__}: {exc}'
+    # Discover additional official series codes from the site's dropdown,
+    # including <button data-value="..."> rather than only <option> elements.
+    # Future series may be included in the blank-series POST already.
+    for code in sorted(discovered_series - {'629001','629901'}):
+        if len(discovered_series) > 30:
+            warnings.append('公式の弾数候補が多いため、追加の個別検索を省略しました。')
+            break
+        label = '公式弾数コード ' + code
+        try:
+            imgs, options = parse(fetch(BASE+'?search=true', search_fields(code)))
+            pages[label] = imgs
         except Exception as exc:
             errors[label] = f'{type(exc).__name__}: {exc}'
     # Only images actually referenced in official cardlist pages count.
@@ -90,10 +117,10 @@ def main():
     for imgs in pages.values(): all_images.update(imgs)
     if not all_images:
         warnings.append('公式ページからカード画像を検出できませんでした。既存データを保持します。')
-    if pages.get('第1弾') and pages.get('プロモーションカード'):
-        a,b = set(pages['第1弾']),set(pages['プロモーションカード'])
+    if pages.get('第1弾（POST）') and pages.get('プロモーションカード（POST）'):
+        a,b = set(pages['第1弾（POST）']),set(pages['プロモーションカード（POST）'])
         if a == b:
-            warnings.append('第1弾とプロモーションの応答が同一です。URLの絞り込みを信用せずカード番号で分類しました。')
+            warnings.append('第1弾とプロモーションのPOST応答が同一です。検索条件が無視された可能性があります。')
     found_by_series = {}
     for card_id in all_images:
         label = series_of(card_id)
@@ -104,6 +131,8 @@ def main():
         if card_id not in existing and card_id not in known:
             existing[card_id] = candidate(card_id,alt)
             added.append(card_id)
+    if not pages:
+        raise SystemExit('All official page fetches failed; existing data unchanged')
     checked = datetime.now(timezone.utc).isoformat()
     # Never delete existing entries or replace user-verified metadata.
     payload = {'source':BASE,'checkedAt':checked,'cards':sorted(existing.values(),key=lambda c:c['id'])}
@@ -120,6 +149,6 @@ def main():
               'note':'公式カード画像のIDから仮登録。未取得のカード名・属性は確認中。公式サイトの掲載範囲や将来の構造変更により検出漏れの可能性あり。'}
     (DATA/'new_card_candidates.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n','utf-8')
     print(json.dumps(report,ensure_ascii=False,indent=2))
-    if not pages: raise SystemExit('All official page fetches failed')
+
 
 if __name__=='__main__': main()
