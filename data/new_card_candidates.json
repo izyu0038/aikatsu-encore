@@ -1,5 +1,5 @@
 {
-  "checked_at_utc": "2026-10-09T14:47:43.208419+00:00",
+  "checked_at_utc": "2026-10-09T15:16:15.439475+00:00",
   "official_found_count": 113,
   "new_count": 10,
   "new_cards": [
@@ -15,7 +15,8 @@
     "EP-038_N"
   ],
   "added_to_official_cards": [],
-  "repaired_image_side_names": [
+  "repaired_image_side_names": [],
+  "added_acquisition_methods": [
     "EP-029_R",
     "EP-030_R",
     "EP-031_R",
@@ -27,6 +28,7 @@
     "EP-037_N",
     "EP-038_N"
   ],
+  "acquisition_found_count": 28,
   "found_by_series": {
     "プロモーションカード": 28,
     "第1弾": 85

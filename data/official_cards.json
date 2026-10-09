@@ -1,6 +1,6 @@
 {
   "source": "https://dcd.aikatsu.com/encore/cardlist/",
-  "checkedAt": "2026-10-09T14:47:43.208419+00:00",
+  "checkedAt": "2026-10-09T15:16:15.439475+00:00",
   "cards": [
     {
       "id": "EP-029_R",
@@ -14,7 +14,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "アイカツ！はじめようプレゼントキャンペーン"
     },
     {
       "id": "EP-030_R",
@@ -28,7 +29,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "アイカツ！はじめようプレゼントキャンペーン"
     },
     {
       "id": "EP-031_R",
@@ -42,7 +44,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "データカードダス アイカツ！アンコール アイカツ！キャンペーン"
     },
     {
       "id": "EP-032_R",
@@ -56,7 +59,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "データカードダス アイカツ！アンコール アイカツ！キャンペーン"
     },
     {
       "id": "EP-033_R",
@@ -70,7 +74,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "データカードダス アイカツ！アンコール アイカツ！キャンペーン"
     },
     {
       "id": "EP-034_R",
@@ -84,7 +89,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "データカードダス アイカツ！アンコール アイカツ！キャンペーン"
     },
     {
       "id": "EP-035_R",
@@ -98,7 +104,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "データカードダス アイカツ！アンコール アイカツ！キャンペーン"
     },
     {
       "id": "EP-036_R",
@@ -112,7 +119,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "データカードダス アイカツ！アンコール アイカツ！キャンペーン"
     },
     {
       "id": "EP-037_N",
@@ -126,7 +134,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "ちゃお2026年11月号ふろく"
     },
     {
       "id": "EP-038_N",
@@ -140,7 +149,8 @@
       "type": "確認中",
       "brand": "確認中",
       "category": "確認中",
-      "appealPoints": null
+      "appealPoints": null,
+      "acquisitionMethod": "ちゃお2026年11月号ふろく"
     }
   ]
 }
