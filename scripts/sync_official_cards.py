@@ -66,11 +66,23 @@ def parse(markup):
     series_ids = set(SERIES_RE.findall(markup)) | p.series_options
     return p.images, series_ids
 
+def provisional_name(card_id):
+    return f'名称確認中（{card_id}）'
+
+
+def clean_official_alt(card_id, alt):
+    # Official image alt text may describe a side of the card, not its name.
+    name = re.sub(re.escape(card_id), '', alt or '', flags=re.I).strip(' -_　:：')
+    generic = {'card', 'カード', 'image', '画像', '表面', '裏面',
+               'カード表面', 'カード裏面', 'おもて', 'うら', 'front', 'back'}
+    if not name or name.lower() in generic or len(name) > 90 or '<' in name or '>' in name:
+        return provisional_name(card_id)
+    return name
+
+
 def candidate(card_id, alt):
     # A card ID and image are sufficient for a clearly marked provisional entry.
-    name = re.sub(re.escape(card_id), '', alt, flags=re.I).strip(' -_　:：')
-    if not name or name.lower() in ('card','カード','image','画像') or len(name)>90 or '<' in name:
-        name = f'名称確認中（{card_id}）'
+    name = clean_official_alt(card_id, alt)
     rarity_code = card_id.rsplit('_',1)[-1]
     return {'id':card_id,'name':name,'rarityCode':rarity_code,'rarity':RARITY[rarity_code],
             'cardType':series_of(card_id),'front':IMAGE_BASE+card_id+'.webp',
@@ -127,10 +139,17 @@ def main():
         found_by_series.setdefault(label,[]).append(card_id)
     for label in found_by_series: found_by_series[label].sort()
     added = []
+    repaired_names = []
     for card_id,(_,alt) in sorted(all_images.items()):
         if card_id not in existing and card_id not in known:
             existing[card_id] = candidate(card_id,alt)
             added.append(card_id)
+        elif card_id in existing:
+            # Repair only incorrect image-side labels; preserve verified names.
+            old_name = str(existing[card_id].get('name') or '').strip()
+            if old_name in {'表面', '裏面', 'カード表面', 'カード裏面'}:
+                existing[card_id]['name'] = provisional_name(card_id)
+                repaired_names.append(card_id)
     if not pages:
         raise SystemExit('All official page fetches failed; existing data unchanged')
     checked = datetime.now(timezone.utc).isoformat()
@@ -142,7 +161,7 @@ def main():
         warnings.append(f'プロモーションは{promo_count}枚検出。公式表示28枚との差があります。ページの取得範囲を確認してください。')
     report = {'checked_at_utc':checked,'official_found_count':len(all_images),
               'new_count':len(set(all_images)-known),'new_cards':sorted(set(all_images)-known),
-              'added_to_official_cards':added,'found_by_series':{k:len(v) for k,v in sorted(found_by_series.items())},
+              'added_to_official_cards':added,'repaired_image_side_names':repaired_names,'found_by_series':{k:len(v) for k,v in sorted(found_by_series.items())},
               'found_by_source':{k:len(v) for k,v in pages.items()},
               'discovered_series_codes':sorted(discovered_series),
               'errors':errors,'warnings':warnings,
