@@ -1,20 +1,22 @@
 {
-  "checked_at_utc": "2026-10-08T21:14:11.220858+00:00",
+  "checked_at_utc": "2026-10-09T01:15:43.040580+00:00",
   "official_found_count": 85,
   "new_count": 0,
   "new_cards": [],
   "added_to_official_cards": [],
-  "found_by_source": {
-    "第1弾": {
-      "detected": 85,
-      "publishable": 0
-    },
-    "プロモーションカード": {
-      "detected": 85,
-      "publishable": 0
-    }
+  "found_by_series": {
+    "第1弾": 85
   },
+  "found_by_source": {
+    "全カード": 85,
+    "第1弾": 85,
+    "プロモーションカード": 85
+  },
+  "discovered_series_codes": [],
   "errors": {},
-  "warnings": [],
-  "note": "名前が画像altに明記されたカードのみ自動登録。未確認の属性は確認中。"
+  "warnings": [
+    "第1弾とプロモーションの応答が同一です。URLの絞り込みを信用せずカード番号で分類しました。",
+    "プロモーションは0枚検出。公式表示28枚との差があります。ページの取得範囲を確認してください。"
+  ],
+  "note": "公式カード画像のIDから仮登録。未取得のカード名・属性は確認中。公式サイトの掲載範囲や将来の構造変更により検出漏れの可能性あり。"
 }
