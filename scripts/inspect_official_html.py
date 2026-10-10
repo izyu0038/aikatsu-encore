@@ -107,6 +107,42 @@ class StructureParser(HTMLParser):
             self.element_stack = []
 
 
+
+def inspect_scripts(script_urls):
+    """Read-only inspection of same-site JavaScript; never execute remote code."""
+    results = []
+    seen = set()
+    for url in script_urls:
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme != 'https' or parsed.hostname != 'dcd.aikatsu.com':
+            continue
+        if url in seen or len(seen) >= 20:
+            continue
+        seen.add(url)
+        item = {'url': url}
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Referer': BASE})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                content = resp.read(1_000_001)
+                item['http_status'] = resp.status
+            if len(content) > 1_000_000:
+                item['warning'] = 'File exceeds 1 MB; skipped analysis'
+            else:
+                source = content.decode('utf-8', 'replace')
+                item['length'] = len(source)
+                # Short, contextual excerpts; never claim that a keyword proves a working filter.
+                pattern = re.compile(r'(?i)series|category|brand|rarity|cardlist|search|\btype\b|\bajax\b|fetch\s*\(|\.json')
+                matches = list(pattern.finditer(source))
+                item['keyword_match_count'] = len(matches)
+                item['excerpts'] = [
+                    {'keyword': m.group(), 'context': source[max(0, m.start()-140):min(len(source), m.end()+200)]}
+                    for m in matches[:35]
+                ]
+        except Exception as exc:
+            item['error'] = f'{type(exc).__name__}: {exc}'
+        results.append(item)
+    return results
+
 def main():
     body = urllib.parse.urlencode(FIELDS).encode('utf-8')
     request = urllib.request.Request(URL, data=body, headers={
@@ -153,6 +189,12 @@ def main():
         'caution': ('Labels/options and HTTP 200 do not prove that a search filter works. '
                     'Image-only text cannot be inferred from HTML. Do not auto-assign metadata from this report.'),
     }
+    js_report = {
+        'checked_at_utc': report['checked_at_utc'],
+        'purpose': 'Read-only inspection of same-host JavaScript references and search-related excerpts',
+        'scripts': inspect_scripts(parser.scripts),
+        'caution': 'Keyword matches do not prove filters work. No card metadata is assigned.',
+    }
     image_manifest = {
         'purpose': 'Official image candidates; front/back role not yet verified',
         'source_page': URL, 'cards': manifest,
@@ -160,6 +202,9 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'html_structure_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     (OUT / 'first_series_image_manifest.json').write_text(json.dumps(image_manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (OUT / 'javascript_search_report.json').write_text(json.dumps(js_report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print('JS inspected:', len(js_report['scripts']))
+    print('Saved: diagnostic_output/javascript_search_report.json')
     print('HTTP:', status, 'Modal count:', len(parser.modals), 'First series:', len(first_ids))
     print('Selects:', [(s['name'], len(s['options'])) for s in parser.selects])
     for card_id in sampled_ids:
