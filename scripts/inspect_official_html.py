@@ -310,5 +310,74 @@ def main():
     print('READ ONLY: no card data was changed.')
 
 
+def verify_search_filters():
+    """Compare returned card IDs for a few official filter values (read-only)."""
+    cases = [
+        ('baseline', None, None),
+        ('type_cute', 'type', 'キュート'),
+        ('type_cool', 'type', 'クール'),
+        ('category_tops', 'category', 'トップス'),
+        ('category_shoes', 'category', 'シューズ'),
+        ('brand_angely_sugar', 'brand', 'エンジェリーシュガー'),
+        ('rarity_pr', 'rarity', 'PR'),
+        ('invalid_type_control', 'type', '__NONEXISTENT_FILTER_VALUE_98765__'),
+    ]
+    results = []
+    baseline_ids = None
+    for case_name, field, value in cases:
+        fields = dict(FIELDS)
+        if field:
+            fields[field] = value
+        request = urllib.request.Request(
+            URL,
+            data=urllib.parse.urlencode(fields).encode('utf-8'),
+            headers={
+                'User-Agent': 'Mozilla/5.0 (compatible; EncoreReadOnlyDiagnostic/1.0)',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'text/html',
+                'Referer': BASE,
+            },
+        )
+        item = {'case': case_name, 'field': field, 'value': value}
+        try:
+            with urllib.request.urlopen(request, timeout=40) as response:
+                markup = response.read(3_000_000).decode('utf-8', 'replace')
+                item['http_status'] = response.status
+                item['final_url'] = response.url
+            parser = StructureParser()
+            parser.feed(markup)
+            ids = sorted(card_id for card_id in parser.modals if card_id.startswith('E1-'))
+            item['card_count'] = len(ids)
+            item['card_ids'] = ids
+            item['html_length'] = len(markup)
+            if case_name == 'baseline':
+                baseline_ids = set(ids)
+            elif baseline_ids is not None:
+                item['is_subset_of_baseline'] = set(ids).issubset(baseline_ids)
+                item['identical_to_baseline'] = set(ids) == baseline_ids
+                item['outside_baseline'] = sorted(set(ids) - baseline_ids)
+        except Exception as exc:
+            item['error'] = f'{type(exc).__name__}: {exc}'
+        results.append(item)
+        print('Filter check:', case_name, 'cards:', item.get('card_count'), 'error:', item.get('error'))
+
+    report = {
+        'checked_at_utc': datetime.now(timezone.utc).isoformat(),
+        'purpose': 'Read-only verification of POST search filters against baseline first-series card IDs',
+        'submitted_series': FIELDS['series'],
+        'results': results,
+        'interpretation_note': (
+            'Different subsets suggest filtering, but do not prove every card attribute. '
+            'If a filter returns the baseline or zero cards, check server handling and control results. '
+            'No card data is modified.'
+        ),
+    }
+    OUT.mkdir(parents=True, exist_ok=True)
+    destination = OUT / 'search_filter_verification.json'
+    destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print('Saved:', destination)
+
+
 if __name__ == '__main__':
     main()
+    verify_search_filters()
