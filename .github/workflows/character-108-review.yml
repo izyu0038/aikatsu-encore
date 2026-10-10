@@ -1,0 +1,25 @@
+name: Review 108 card characters
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install image dependencies
+        run: python -m pip install Pillow numpy
+      - name: Build candidate review (no data changes)
+        run: python scripts/build_108_character_candidates.py
+      - name: Download review report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-108-review
+          path: diagnostic_output/character_108_review/
+          if-no-files-found: warn
