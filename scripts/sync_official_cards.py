@@ -163,10 +163,9 @@ def main():
     target = DATA/'official_cards.json'
     old = json.loads(target.read_text('utf-8')) if target.exists() else {'cards':[]}
     existing = {str(c['id']).upper():c for c in old.get('cards',[]) if isinstance(c,dict) and c.get('id')}
-    known_file = DATA/'known_cards.json'
-    known_data = json.loads(known_file.read_text('utf-8')) if known_file.exists() else {'cards':[]}
-    known_list = known_data.get('cards',[]) if isinstance(known_data,dict) else known_data
-    known = {str(c.get('id') if isinstance(c,dict) else c).upper() for c in known_list}
+    # Existing official_cards.json entries are the only exclusion for this output.
+    # known_cards.json may list IDs managed elsewhere, but those cards must
+    # still be represented here for the review tool's complete card list.
     # The official form submits POST to ?search=true. In the verified
     # 2026-10-09 diagnostic, a blank series returned 113 cards (85 + 28 promos).
     # Do not use the obsolete 629002 code; the official promo code is 629901.
@@ -216,7 +215,7 @@ def main():
     repaired_names = []
     added_acquisitions = []
     for card_id,(_,alt) in sorted(all_images.items()):
-        if card_id not in existing and card_id not in known:
+        if card_id not in existing:
             existing[card_id] = candidate(card_id,alt)
             added.append(card_id)
         elif card_id in existing:
@@ -239,7 +238,7 @@ def main():
     if promo_count < 28:
         warnings.append(f'プロモーションは{promo_count}枚検出。公式表示28枚との差があります。ページの取得範囲を確認してください。')
     report = {'checked_at_utc':checked,'official_found_count':len(all_images),
-              'new_count':len(set(all_images)-known),'new_cards':sorted(set(all_images)-known),
+              'new_count':len(added),'new_cards':added,
               'added_to_official_cards':added,'repaired_image_side_names':repaired_names,
               'added_acquisition_methods':added_acquisitions,'acquisition_found_count':len(acquisitions),'found_by_series':{k:len(v) for k,v in sorted(found_by_series.items())},
               'found_by_source':{k:len(v) for k,v in pages.items()},
