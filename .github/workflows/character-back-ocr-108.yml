@@ -1,0 +1,28 @@
+name: OCR 108 card back character names
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Japanese OCR
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn
+          python -m pip install Pillow
+      - name: Read 108 card backs
+        run: python scripts/ocr_108_back_characters.py
+      - name: Upload review results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-back-ocr-108
+          path: diagnostic_output/character_back_ocr_108/
+          if-no-files-found: warn
