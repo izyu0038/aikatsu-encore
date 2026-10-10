@@ -38,9 +38,19 @@ class StructureParser(HTMLParser):
         self._select = None
         self._option = None
         self.scripts = []
+        self.inputs = []
+        self.buttons = []
+        self.labels = []
+        self._label = None
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        if tag == 'input':
+            self.inputs.append({k: a.get(k, '') for k in ('name','id','type','value','checked','class')})
+        if tag == 'button':
+            self.buttons.append({k: a.get(k, '') for k in ('name','id','type','value','class')})
+        if tag == 'label':
+            self._label = {'for': a.get('for', ''), 'class': a.get('class', ''), 'text': ''}
         if tag == 'form':
             self.forms.append({k: a.get(k, '') for k in ('action', 'method', 'id')})
         if tag == 'script' and a.get('src'):
@@ -76,6 +86,8 @@ class StructureParser(HTMLParser):
             self.element_stack.append(None)
 
     def handle_data(self, data):
+        if self._label is not None:
+            self._label['text'] += data
         if self._option is not None:
             self._option['label'] += data
         if self.active_id is None:
@@ -89,6 +101,10 @@ class StructureParser(HTMLParser):
                 element['text'] += value + ' '
 
     def handle_endtag(self, tag):
+        if tag == 'label' and self._label is not None:
+            self._label['text'] = ' '.join(self._label['text'].split())[:300]
+            self.labels.append(self._label)
+            self._label = None
         if tag == 'option' and self._option is not None:
             self._option['label'] = ' '.join(self._option['label'].split())
             self._select['options'].append(self._option)
@@ -185,6 +201,9 @@ def main():
         'total_modals': len(parser.modals), 'first_series_modal_count': len(first_ids),
         'sampled_ids': sampled_ids, 'submitted_fields': FIELDS,
         'forms': parser.forms[:20], 'selects': parser.selects[:30],
+        'inputs': parser.inputs[:300], 'buttons': parser.buttons[:100],
+        'labels': parser.labels[:300],
+        'search_field_html_excerpts': [markup[max(0,m.start()-400):min(len(markup),m.end()+700)] for m in list(re.finditer(r'(?i)(?:name|id)=[\"\'](?:series|type|rarity|category|brand)[\"\']', markup))[:35]],
         'script_urls': parser.scripts[:40], 'targets': targets,
         'caution': ('Labels/options and HTTP 200 do not prove that a search filter works. '
                     'Image-only text cannot be inferred from HTML. Do not auto-assign metadata from this report.'),
@@ -207,6 +226,7 @@ def main():
     print('Saved: diagnostic_output/javascript_search_report.json')
     print('HTTP:', status, 'Modal count:', len(parser.modals), 'First series:', len(first_ids))
     print('Selects:', [(s['name'], len(s['options'])) for s in parser.selects])
+    print('Inputs:', len(parser.inputs), 'Labels:', len(parser.labels))
     for card_id in sampled_ids:
         print(card_id, 'labels:', targets[card_id]['labels_found_in_modal'])
     print('Saved: diagnostic_output/html_structure_report.json')
