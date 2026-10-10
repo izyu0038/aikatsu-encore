@@ -1,0 +1,27 @@
+name: Character comparison sheets
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install Pillow
+      - name: Fetch card image samples
+        run: python scripts/inspect_card_images.py
+      - name: Build reference and card contact sheets
+        run: python scripts/build_character_comparison.py
+      - name: Upload diagnostic sheets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-comparison
+          path: diagnostic_output/character_comparison/
+          if-no-files-found: warn
