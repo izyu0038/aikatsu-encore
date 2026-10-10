@@ -1,0 +1,22 @@
+name: Inspect card names
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Inspect official news for card names
+        run: python scripts/inspect_card_names.py
+      - name: Upload diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-name-research
+          path: diagnostic_output/card_name_research.json
+          if-no-files-found: warn
