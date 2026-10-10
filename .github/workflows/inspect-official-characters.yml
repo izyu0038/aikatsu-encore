@@ -1,0 +1,27 @@
+name: Inspect official characters
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install requests beautifulsoup4
+      - name: Collect official news evidence
+        run: python scripts/inspect_official_characters.py
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-character-research
+          path: diagnostic_output/official_character_research/
+          if-no-files-found: warn
