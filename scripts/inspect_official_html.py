@@ -124,6 +124,77 @@ class StructureParser(HTMLParser):
 
 
 
+
+class DropdownParser(HTMLParser):
+    """Collect HTML search choices and nearby context without executing scripts."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.stack = []
+        self.choices = []
+        self.fields = []
+        self.current_select = None
+        self.current_option = None
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        parent = self.stack[-1] if self.stack else None
+        node = {'tag': tag, 'attrs': a, 'text': [], 'parent': parent}
+        if 'data-value' in a:
+            self.choices.append(node)
+        if tag == 'select':
+            self.current_select = {'name': a.get('name', ''), 'id': a.get('id', ''), 'options': []}
+            self.fields.append(self.current_select)
+        if tag == 'option' and self.current_select is not None:
+            self.current_option = {'value': a.get('value', ''), 'label_parts': []}
+            self.current_select['options'].append(self.current_option)
+        if tag not in VOID_TAGS:
+            self.stack.append(node)
+
+    def handle_data(self, data):
+        cleaned = ' '.join(data.split())
+        if not cleaned:
+            return
+        for node in self.stack:
+            node['text'].append(cleaned)
+        if self.current_option is not None:
+            self.current_option['label_parts'].append(cleaned)
+
+    def handle_endtag(self, tag):
+        if tag == 'option':
+            self.current_option = None
+        if tag == 'select':
+            self.current_select = None
+        for i in range(len(self.stack)-1, -1, -1):
+            if self.stack[i]['tag'] == tag:
+                del self.stack[i:]
+                break
+
+    def as_report(self):
+        output = []
+        for node in self.choices:
+            a = node['attrs']
+            ancestors = []
+            parent = node['parent']
+            while parent is not None and len(ancestors) < 5:
+                pa = parent['attrs']
+                ancestors.append({'tag': parent['tag'], 'id': pa.get('id', ''),
+                                  'class': pa.get('class', ''), 'name': pa.get('name', ''),
+                                  'data-name': pa.get('data-name', '')})
+                parent = parent['parent']
+            output.append({'tag': node['tag'], 'label': ' '.join(node['text'])[:200],
+                           'data_value': a.get('data-value', ''),
+                           'id': a.get('id', ''), 'class': a.get('class', ''),
+                           'name': a.get('name', ''), 'ancestors': ancestors})
+        selects = [{'name': field['name'], 'id': field['id'],
+                    'options': [{'value': o['value'], 'label': ' '.join(o['label_parts'])}
+                                for o in field['options']]}
+                   for field in self.fields]
+        return {'purpose': 'Read-only extraction of HTML data-value choices and select options',
+                'data_value_choices': output, 'select_options': selects,
+                'counts': {'data_value_choices': len(output), 'selects': len(selects)},
+                'caution': 'Values are HTML observations only; search behavior remains unverified.'}
+
+
 def inspect_scripts(script_urls):
     """Read-only inspection of same-site JavaScript; never execute remote code."""
     results = []
@@ -174,6 +245,9 @@ def main():
 
     parser = StructureParser()
     parser.feed(markup)
+    dropdown_parser = DropdownParser()
+    dropdown_parser.feed(markup)
+    dropdown_report = dropdown_parser.as_report()
     first_ids = sorted(x for x in parser.modals if x.startswith('E1-'))
     sampled_ids = first_ids[:TARGET_LIMIT]
     targets = {}
@@ -222,6 +296,8 @@ def main():
     (OUT / 'html_structure_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     (OUT / 'first_series_image_manifest.json').write_text(json.dumps(image_manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     (OUT / 'javascript_search_report.json').write_text(json.dumps(js_report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    (OUT / 'search_dropdown_options.json').write_text(json.dumps(dropdown_report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print('Saved: diagnostic_output/search_dropdown_options.json; choices:', dropdown_report['counts']['data_value_choices'])
     print('JS inspected:', len(js_report['scripts']))
     print('Saved: diagnostic_output/javascript_search_report.json')
     print('HTTP:', status, 'Modal count:', len(parser.modals), 'First series:', len(first_ids))
