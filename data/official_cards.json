@@ -1,6 +1,6 @@
 {
   "source": "https://dcd.aikatsu.com/encore/cardlist/",
-  "checkedAt": "2026-10-29T21:33:15.432768+00:00",
+  "checkedAt": "2026-10-30T21:29:11.824626+00:00",
   "cards": [
     {
       "id": "E1-01_PR",
@@ -1466,6 +1466,66 @@
       "category": "確認中",
       "appealPoints": null,
       "acquisitionMethod": "アイカツ！オフィシャルストア購入特典"
+    },
+    {
+      "id": "EP-019_N",
+      "name": "名称確認中（EP-019_N）",
+      "rarityCode": "N",
+      "rarity": "ノーマル",
+      "cardType": "プロモーションカード",
+      "front": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-019_N.webp",
+      "back": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-019_N_b.webp",
+      "character": "確認中",
+      "type": "確認中",
+      "brand": "確認中",
+      "category": "確認中",
+      "appealPoints": null,
+      "acquisitionMethod": "しまむら「アイカツスターズ！」「アイカツ！」グッズ"
+    },
+    {
+      "id": "EP-020_N",
+      "name": "名称確認中（EP-020_N）",
+      "rarityCode": "N",
+      "rarity": "ノーマル",
+      "cardType": "プロモーションカード",
+      "front": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-020_N.webp",
+      "back": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-020_N_b.webp",
+      "character": "確認中",
+      "type": "確認中",
+      "brand": "確認中",
+      "category": "確認中",
+      "appealPoints": null,
+      "acquisitionMethod": "しまむら「アイカツスターズ！」「アイカツ！」グッズ"
+    },
+    {
+      "id": "EP-021_N",
+      "name": "名称確認中（EP-021_N）",
+      "rarityCode": "N",
+      "rarity": "ノーマル",
+      "cardType": "プロモーションカード",
+      "front": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-021_N.webp",
+      "back": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-021_N_b.webp",
+      "character": "確認中",
+      "type": "確認中",
+      "brand": "確認中",
+      "category": "確認中",
+      "appealPoints": null,
+      "acquisitionMethod": "しまむら「アイカツスターズ！」「アイカツ！」グッズ"
+    },
+    {
+      "id": "EP-022_N",
+      "name": "名称確認中（EP-022_N）",
+      "rarityCode": "N",
+      "rarity": "ノーマル",
+      "cardType": "プロモーションカード",
+      "front": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-022_N.webp",
+      "back": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-022_N_b.webp",
+      "character": "確認中",
+      "type": "確認中",
+      "brand": "確認中",
+      "category": "確認中",
+      "appealPoints": null,
+      "acquisitionMethod": "しまむら「アイカツスターズ！」「アイカツ！」グッズ"
     },
     {
       "id": "EP-029_R",
