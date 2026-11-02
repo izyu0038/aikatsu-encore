@@ -1,6 +1,6 @@
 {
   "source": "https://dcd.aikatsu.com/encore/cardlist/",
-  "checkedAt": "2026-11-01T21:28:58.387860+00:00",
+  "checkedAt": "2026-11-02T21:37:08.697647+00:00",
   "cards": [
     {
       "id": "E1-01_PR",
@@ -1676,6 +1676,21 @@
       "category": "確認中",
       "appealPoints": null,
       "acquisitionMethod": "ちゃお2026年11月号ふろく"
+    },
+    {
+      "id": "EP-042_PR",
+      "name": "名称確認中（EP-042_PR）",
+      "rarityCode": "PR",
+      "rarity": "プレミアムレア",
+      "cardType": "プロモーションカード",
+      "front": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-042_PR.webp",
+      "back": "https://dcd.aikatsu.com/encore/images/cardlist/card/EP-042_PR_b.webp",
+      "character": "確認中",
+      "type": "確認中",
+      "brand": "確認中",
+      "category": "確認中",
+      "appealPoints": null,
+      "acquisitionMethod": "Tamagotchi Paradiseアイカツフォン アンコール"
     }
   ]
 }
